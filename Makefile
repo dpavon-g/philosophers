@@ -22,23 +22,38 @@ INCLUDES = -I. -I$(LIB_PATH)
 FSANITIZE = -g3 -fsanitize=address
 CFLAGS = -Wall -Wextra -Werror $(INCLUDES)
 
+#COLORS
+#RED = \033[0;31m
+#GREEN = \033[0;32m
+#YELLOW = \033[0;33m
+#GREY = \033[2;37m
+#MAGENTA = \033[0;35m
+#CURSIVE = \033[3m
+#NO_COLOR = \033[0m
+
 all: $(NAME)
 
 $(NAME): $(OBJECTS)
 	@make -s -C $(LIB_PATH)
 	@$(CC) $(CFLAGS) $(LINK) $^ -L ./libft/ -l ft -o $@
-	
+	@echo "Minishell compiled $(GREEN) ✔✔✔"
+
 clean:
-	@make -C $(LIB_PATH) clean
 	@rm -f $(OBJECTS)
+	@$(MAKE) clean -C libft
+	@clear
+	@echo "**** Object files removed ****"
 
 normi:
 	norminette $(SRCS)
 
 fclean: clean
-	@make -C $(LIB_PATH) fclean
 	@rm -f $(NAME)
+	@rm -f libft/libft.a
+	@echo "**** Fclean done ****"
 
 re: fclean all
 
 .PHONY:	all debug clean fclean re
+
+.SILENT: $(OBJS)

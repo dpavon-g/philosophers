@@ -17,45 +17,6 @@ void	charge_dates(t_dates *dates, int argc, char **argv)
 	}
 }
 
-t_philos	*new_philo(pthread_mutex_t mutex)
-{
-	t_philos	*philo;
-
-	philo = malloc(sizeof(t_list));
-	if (!philo)
-		return (NULL);
-	philo->mutex = mutex;
-	philo->next = NULL;
-	return (philo);	
-}
-
-t_philos	*ft_lstlast2(t_philos *lst)
-{
-	if (!lst)
-		return (NULL);
-	while (lst->next)
-		lst = lst->next;
-	return (lst);
-}
-
-void	ft_lstadd_back2(t_philos **philos, t_philos *new)
-{
-	t_philos	*temp;
-
-	temp = NULL;
-	if (philos)
-	{
-		temp = *philos;
-		if (!temp)
-			*philos = new;
-		else
-		{	
-			temp = ft_lstlast2(*philos);
-			temp->next = new;
-		}
-	}
-}
-
 void	insert_philos(t_dates dates, t_philos **philos)
 {
 	int	i;
@@ -70,16 +31,32 @@ void	insert_philos(t_dates dates, t_philos **philos)
 	(void)dates;
 }
 
+void	create_fork(t_philos **philos, int total)
+{
+	int i;
+
+	i = 0;
+	while (i < total)
+	{
+		philos[i]->mutex = PTHREAD_MUTEX_INITIALIZER;
+		i++;
+	}
+	(void)i;
+}
+
 int main(int argc, char **argv)
 {
 	t_dates		dates;
 	t_philos	*philos;
-
+	
 	if (argc == 5 || argc == 6)
 	{
 		philos = NULL;
 		charge_dates(&dates, argc, argv);
-		insert_philos(dates, &philos);	
+		insert_philos(dates, &philos);
+		philos = malloc(sizeof(t_philos) * dates.philo_num);
+		create_fork(&philos, dates.philo_num);
+		free(philos);
 	}
 	else
 		ft_printf("Error!\n");
