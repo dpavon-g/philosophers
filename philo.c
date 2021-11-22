@@ -17,51 +17,69 @@ void	charge_dates(t_dates *dates, int argc, char **argv)
 	}
 }
 
-void	insert_philos(t_dates dates, t_philos **philos)
+void	leaks(void)
 {
-	int	i;
-
-	i = 0;
-	while (i < dates.philo_num)
-	{
-		//philos->mutex = ();
-		i++;
-	}
-	(void)philos;
-	(void)dates;
+	system("leaks philo");
 }
 
-void	create_fork(t_philos **philos, int total)
+void	ft_usleep(int time)
+{
+	int count;
+
+	count = 0;
+	while (count < time)
+	{
+		usleep(10);
+		count += 10;
+	}
+}
+
+void	start_dinner(t_dates dates, pthread_mutex_t *philo)
 {
 	int i;
+	int eat_count;
 
-	i = 0;
-	while (i < total)
+	i = 1;
+	eat_count = 1;
+	while (i <= dates.philo_num)
 	{
-		philos[i]->mutex = PTHREAD_MUTEX_INITIALIZER;
+		pthread_mutex_init(&philo[i], NULL);
 		i++;
 	}
-	(void)i;
+	i = 0;
+	while (i <= dates.philo_num)
+	{
+		if (i % 2 != 0)
+		{
+			printf("Philo %d has taken a fork.\n", i);
+			pthread_mutex_lock(&philo[i]);
+			printf("Philo %d has taken a fork.\n", i);
+			pthread_mutex_lock(&philo[i + 1]);
+			printf("Philo %d is eating.\n", i);
+			ft_usleep(dates.time_to_eat);
+			pthread_mutex_unlock(&philo[i]);
+			pthread_mutex_unlock(&philo[i + 1]);
+		}
+		i++;
+	}
 }
 
 int main(int argc, char **argv)
 {
 	t_dates		dates;
-	t_philos	*philos;
+	pthread_mutex_t *philos;
 	
+	//atexit(leaks);
 	if (argc == 5 || argc == 6)
 	{
-		philos = NULL;
 		charge_dates(&dates, argc, argv);
-		insert_philos(dates, &philos);
-		philos = malloc(sizeof(t_philos) * dates.philo_num);
-		create_fork(&philos, dates.philo_num);
+		philos = malloc(sizeof(pthread_mutex_t) * dates.philo_num);
+		start_dinner(dates, philos);
 		free(philos);
 	}
 	else
 		ft_printf("Error!\n");
 	return (0);
-	(void)philos;
 	(void)argv;
 	(void)argc;
 }
