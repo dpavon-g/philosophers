@@ -7,16 +7,21 @@
 typedef	struct s_philo
 {
 	pthread_mutex_t mutex;
-	struct s_philo *next;
-}	t_philos;
+	pthread_t		philo;
+	int				id;
+}	t_table;
 
 typedef	struct s_dates
 {
-		int	philo_num;
-		int time_to_die;
-		int	time_to_eat;
-		int	time_to_sleep;
-		int	eat_number;
+	long			philo_num;
+	int				time_to_die;
+	int				time_to_eat;
+	int				time_to_sleep;
+	int				eat_number;
+	int				die_flag;
+	pthread_mutex_t print_mutex;
+	t_list			*philos;
 }	t_dates;
+
 
 #endif
