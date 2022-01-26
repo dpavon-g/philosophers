@@ -24,9 +24,10 @@ t_list	*roll_call(int num, t_dates *dates)
 
 void	ft_usleep(int	time)
 {
-	while (time - 10 >= 0)
+	while (time - 10 >= 10)
 	{
-		usleep(10);
+	// printf("usleep%d\n", time);
+		usleep(100);
 		time -= 10;
 	}
 	usleep(time);
@@ -66,13 +67,14 @@ void	*birth_philo(void *args)
 		pthread_mutex_unlock(&dates->print_mutex);
 		pthread_mutex_lock(&dates->print_mutex);
 		printf("Philo %d is eatting\n", philo_content->id);
+		ft_usleep(dates->time_to_eat);
 		count++;
 		pthread_mutex_unlock(&dates->print_mutex);
 		pthread_mutex_unlock(&philo_content->mutex);
-		ft_usleep(dates->time_to_eat);
 		pthread_mutex_unlock(&((t_philo *)&philo_list->next)->mutex);
 		pthread_mutex_unlock(&dates->print_mutex);
 		ft_philo_sleep(dates->time_to_sleep, philo_content->id);
+
 		if (count == dates->eat_number)
 			dates->die_flag = 1;
 	}
@@ -109,6 +111,7 @@ int	main(int argc, char **argv)
 	if (argc == 5 || argc == 6)
 	{
 		charge_dates(&dates, argc, argv);
+		// printf("Tiempo %d\n", dates.time_to_eat);
 		if (dates.philo_num > 1)
 		{
 			pthread_mutex_init(&dates.print_mutex, NULL);
