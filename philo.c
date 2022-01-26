@@ -11,7 +11,7 @@ t_list	*roll_call(int num, t_dates *dates)
 	table = malloc(sizeof(t_philo) * num);
 	while (i < num)
 	{
-		table[i].id = i;
+		table[i].id = i + 1;
 		table[i].dates = dates;
 		pthread_mutex_init(&table[i].mutex, NULL);
 		ft_lstadd_back(&philos, ft_lstnew(&table[i]));
@@ -22,21 +22,81 @@ t_list	*roll_call(int num, t_dates *dates)
 	return (philos);
 }
 
+void	ft_usleep(int	time)
+{
+	while (time - 10 >= 0)
+	{
+		usleep(10);
+		time -= 10;
+	}
+	usleep(time);
+}
+
+void	ft_philo_sleep(int	time, int id)
+{
+	printf("Philo %d is sleeping\n", id);
+	ft_usleep(time);
+}
+
 void	*birth_philo(void *args)
 {
-	t_philo *philo;
+	t_philo *philo_content;
+	t_list	*philo_list;
 	t_dates	*dates;
+	int		count;
 
-	philo = ((t_list *)args)->content;
-	dates = philo->dates;
-	while (1)
+	count = 0;
+	philo_list = args;
+	philo_content = philo_list->content;
+	dates = philo_content->dates;
+	if (philo_content->id % 2 == 0)
+	{
+		ft_usleep(100);
+		printf("Philo %d is thinking\n", philo_content->id);
+	}
+	while (dates->die_flag == 0)
 	{
 		pthread_mutex_lock(&dates->print_mutex);
-		printf("Philo %d empieza\n", philo->id);
-		printf("Philo %d termina\n", philo->id);
+		pthread_mutex_lock(&philo_content->mutex);
+		printf("Philo %d take first spoon\n", philo_content->id);
 		pthread_mutex_unlock(&dates->print_mutex);
+		pthread_mutex_lock(&((t_philo *)&philo_list->next)->mutex);
+		pthread_mutex_lock(&dates->print_mutex);
+		printf("Philo %d take second spoon\n", philo_content->id);
+		pthread_mutex_unlock(&dates->print_mutex);
+		pthread_mutex_lock(&dates->print_mutex);
+		printf("Philo %d is eatting\n", philo_content->id);
+		count++;
+		pthread_mutex_unlock(&dates->print_mutex);
+		pthread_mutex_unlock(&philo_content->mutex);
+		ft_usleep(dates->time_to_eat);
+		pthread_mutex_unlock(&((t_philo *)&philo_list->next)->mutex);
+		pthread_mutex_unlock(&dates->print_mutex);
+		ft_philo_sleep(dates->time_to_sleep, philo_content->id);
+		if (count == dates->eat_number)
+			dates->die_flag = 1;
 	}
 	return (args);
+}
+
+void	charge_dates(t_dates *dates, int argc, char **argv)
+{
+	dates->philo_num = ft_atoi(argv[1]);
+	dates->time_to_die = ft_atoi(argv[2]);
+	dates->time_to_eat = ft_atoi(argv[3]);
+	dates->die_flag = 0;
+	dates->time_to_sleep = ft_atoi(argv[4]);
+	dates->philos = roll_call(dates->philo_num, dates);
+	if (argc == 5)
+		dates->eat_number = -1;
+	else
+	{
+		if (ft_atoi(argv[5]) >= 0)
+			dates->eat_number = ft_atoi(argv[5]);
+		else
+			dates->eat_number = 0;
+	}
+	(void)argc;
 }
 
 int	main(int argc, char **argv)
@@ -45,72 +105,34 @@ int	main(int argc, char **argv)
 	t_philo		*philo;
 	int			i;
 
-	if (argc > 1)
+	(void)argv;
+	if (argc == 5 || argc == 6)
 	{
-		i = 0;
-		dates.philo_num = atoi(argv[1]);
-		dates.philos = roll_call(dates.philo_num, &dates);
-		pthread_mutex_init(&dates.print_mutex, NULL);
-		i = 0;
-		while (i < dates.philo_num)
+		charge_dates(&dates, argc, argv);
+		if (dates.philo_num > 1)
 		{
-			philo = (t_philo *)(dates.philos)->content;
-			pthread_create(&philo->philo, NULL, birth_philo, dates.philos);
-			dates.philos = dates.philos->next;
-			i++;
+			pthread_mutex_init(&dates.print_mutex, NULL);
+			i = 0;
+			while (i < dates.philo_num)
+			{
+				philo = (t_philo *)(dates.philos)->content;
+				pthread_create(&philo->philo, NULL, birth_philo, dates.philos);
+				dates.philos = dates.philos->next;
+				i++;
+			}
+			while (!dates.die_flag)
+			i = 0;
+			while (i < dates.philo_num)
+			{
+				philo = (t_philo *)(dates.philos)->content;
+				pthread_join(philo->philo, NULL);
+				dates.philos = dates.philos->next;
+				i++;
+			}
 		}
-		i = 0;
-		while (i < dates.philo_num)
-		{
-			philo = (t_philo *)(dates.philos)->content;
-			pthread_join(philo->philo, NULL);
-			dates.philos = dates.philos->next;
-			i++;
-		}
-		
-		// while (j < dates.philo_num)
-		// {
-		// 	philo = (t_table *)(dates.philos)->content;
-		// 	pthread_join(philo->philo, NULL);
-		// 	dates.philos = dates.philos->next;
-		// 	j++;
-		// }
-
-
-		// while (i < dates.philo_num)
-		// {
-		//
-		// }
-		// // j = 0;
-		// // while (j < dates.philo_num)
-		// // {
-		// 	pthread_join(dates.philos[0].philo, NULL);
-		// 	pthread_join(dates.philos[1].philo, NULL);
-		// 	pthread_join(dates.philos[2].philo, NULL);
-		// // 	j++;
-		// // }
-		// pthread_mutex_destroy(&dates.print_mutex);
-		// pthread_exit(NULL);
 	}
-	// (void)table;
 }
 
-// void	charge_dates(t_dates *dates, int argc, char **argv)
-// {
-// 	dates->philo_num = ft_atoi(argv[1]);
-// 	dates->time_to_die = ft_atoi(argv[2]);
-// 	dates->time_to_eat = ft_atoi(argv[3]);
-// 	dates->time_to_sleep = ft_atoi(argv[4]);
-// 	if (argc == 5)
-// 		dates->eat_number = -1;
-// 	else
-// 	{
-// 		if (ft_atoi(argv[5]) >= 0)
-// 			dates->eat_number = ft_atoi(argv[5]);
-// 		else
-// 			dates->eat_number = 0;
-// 	}
-// }
 
 // void	leaks(void)
 // {
