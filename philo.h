@@ -4,12 +4,6 @@
 # include "libft/libft.h"
 # include <pthread.h>
 
-typedef	struct s_philo
-{
-	pthread_mutex_t mutex;
-	pthread_t		philo;
-	int				id;
-}	t_table;
 
 typedef	struct s_dates
 {
@@ -23,5 +17,12 @@ typedef	struct s_dates
 	t_list			*philos;
 }	t_dates;
 
+typedef	struct s_philo
+{
+	pthread_mutex_t mutex;
+	pthread_t		philo;
+	int				id;
+	t_dates			*dates;
+}	t_philo;
 
 #endif

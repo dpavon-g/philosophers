@@ -1,61 +1,85 @@
 #include "philo.h"
 
-void	*birth_philo(void *args)
+
+t_list	*roll_call(int num, t_dates *dates)
 {
-	t_dates	*dates;
-
-	dates = (t_dates *)args;
-
-	printf("Philo empieza \n");
-	// usleep(1000);
-	printf("Philo termina\n");
-
-
-	return (args);
-}
-
-t_list	*roll_call(int num)
-{
-	t_table		*table;
+	t_philo		*table;
 	t_list		*philos;
 	int			i;
 
 	i = 0;
-	table = malloc(sizeof(t_table) * num);
+	table = malloc(sizeof(t_philo) * num);
 	while (i < num)
 	{
 		table[i].id = i;
+		table[i].dates = dates;
 		pthread_mutex_init(&table[i].mutex, NULL);
 		ft_lstadd_back(&philos, ft_lstnew(&table[i]));
 		i++;
 	}
+	(void)dates;
 	ft_lstlast(philos)->next = philos;
 	return (philos);
 }
 
+void	*birth_philo(void *args)
+{
+	t_philo *philo;
+	t_dates	*dates;
+
+	philo = ((t_list *)args)->content;
+	dates = philo->dates;
+	while (1)
+	{
+		pthread_mutex_lock(&dates->print_mutex);
+		printf("Philo %d empieza\n", philo->id);
+		printf("Philo %d termina\n", philo->id);
+		pthread_mutex_unlock(&dates->print_mutex);
+	}
+	return (args);
+}
+
 int	main(int argc, char **argv)
 {
-	t_list		*philos;
 	t_dates		dates;
-	t_table		*philo;
+	t_philo		*philo;
 	int			i;
 
-	philos = NULL;
 	if (argc > 1)
 	{
 		i = 0;
 		dates.philo_num = atoi(argv[1]);
-		dates.philos = roll_call(dates.philo_num);
-
+		dates.philos = roll_call(dates.philo_num, &dates);
+		pthread_mutex_init(&dates.print_mutex, NULL);
+		i = 0;
 		while (i < dates.philo_num)
 		{
-			philo = (t_table *)(dates.philos)[i];
-
+			philo = (t_philo *)(dates.philos)->content;
+			pthread_create(&philo->philo, NULL, birth_philo, dates.philos);
+			dates.philos = dates.philos->next;
 			i++;
 		}
+		i = 0;
+		while (i < dates.philo_num)
+		{
+			philo = (t_philo *)(dates.philos)->content;
+			pthread_join(philo->philo, NULL);
+			dates.philos = dates.philos->next;
+			i++;
+		}
+		
+		// while (j < dates.philo_num)
+		// {
+		// 	philo = (t_table *)(dates.philos)->content;
+		// 	pthread_join(philo->philo, NULL);
+		// 	dates.philos = dates.philos->next;
+		// 	j++;
+		// }
+
+
 		// while (i < dates.philo_num)
 		// {
-		// 	
+		//
 		// }
 		// // j = 0;
 		// // while (j < dates.philo_num)
