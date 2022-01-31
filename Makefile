@@ -11,7 +11,7 @@
 # **************************************************************************** #
 
 NAME = philo
-CC = gcc
+CC = gcc -pthread
 LIB_PATH = libft/
 LIB_NAME = $(LIB_PATH)libft.a
 INCLUDES = -I. -I$(LIB_PATH)
