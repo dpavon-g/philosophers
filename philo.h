@@ -13,10 +13,6 @@
 #define ANSI_COLOR_CYAN		"\x1b[36m"
 #define ANSI_COLOR_RESET	"\x1b[0m"
 
-#define	eat					"is eatting\n"
-#define	sleep				"is sleeping\n"
-#define	fork				"take a fork\n"
-#define	think				"is thinking\n"
 typedef	struct s_dates
 {
 	long			philo_num;
@@ -32,7 +28,7 @@ typedef	struct s_dates
 typedef	struct s_philo
 {
 	pthread_mutex_t mutex;
-	pthread_t		philo;
+	pthread_t		philo; 
 	int				id;
 	t_dates			*dates;
 }	t_philo;
