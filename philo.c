@@ -13,7 +13,11 @@ t_list	*roll_call(int num, t_dates *dates)
 	{
 		table[i].id = i + 1;
 		table[i].dates = dates;
-		pthread_mutex_init(&table[i].mutex, NULL);
+		pthread_mutex_init(&table[i].left_fork, NULL);
+		if (i + 1 < num)
+			table[i].right_fork = &table[i + 1].left_fork;
+		else
+			table[i].right_fork = &table[0].left_fork;
 		ft_lstadd_back(&philos, ft_lstnew(&table[i]));
 		i++;
 	}
@@ -52,6 +56,19 @@ void	ft_philo_sleep(int	time, int id)
 	ft_usleep(time);
 }
 
+int	check_time(t_dates **dates, useconds_t *actual, useconds_t past)
+{
+	*actual = get_my_time();
+	if ((int)(*actual - past) > (*dates)->time_to_die
+		|| (*dates)->die_flag == 1)
+	{
+		(*dates)->die_flag = 1;
+		return (1);
+	}
+	else
+		return (0);
+}
+
 void	*birth_philo(void *args)
 {
 	t_philo *philo_content;
@@ -59,7 +76,7 @@ void	*birth_philo(void *args)
 	t_dates	*dates;
 	useconds_t	start;
 	useconds_t	action_time;
-	//useconds_t	all_time;
+	// useconds_t	all_time;
 	useconds_t	last_eat;
 
 	philo_list = args;
@@ -68,99 +85,68 @@ void	*birth_philo(void *args)
 	start = get_my_time();
 	action_time = start;
 	last_eat = start;
-/*	if (philo_content->id % 2 == 0)
+	if (philo_content->id % 2 == 0)
 	{
-		all_time = get_my_time() - start;
-		pthread_mutex_lock(&dates->print_mutex);
-		// printf(ANSI_COLOR_CYAN "|%d| Philo %d is thinking\n" ANSI_COLOR_RESET, all_time, philo_content->id);
-		pthread_mutex_unlock(&dates->print_mutex);
-		ft_usleep(100);
-	}*/
+		// all_time = get_my_time() - start;
+		// pthread_mutex_lock(&dates->print_mutex);
+		// printf("|%d| Philo %d is thinking\n", all_time, philo_content->id);
+		// pthread_mutex_unlock(&dates->print_mutex);
+		ft_usleep(60);
+	}
 	while (dates->die_flag == 0)
 	{
-		action_time = get_my_time();
-		if ((int)(action_time - last_eat) > dates->time_to_die)
-		{
-			dates->die_flag = 1;
+		if (check_time(&dates, &action_time, last_eat))
 			break ;
-		}
-		printf("direccion de memoria de mi propio tenedor = %p\n", &philo_content->mutex);
-		printf("direccion de memoria de mi next tenedor = %p\n", &((t_philo *)philo_list->next)->mutex);
-		pthread_mutex_lock(&philo_content->mutex);
-		pthread_mutex_lock(&dates->print_mutex);
-		printf(ANSI_COLOR_CYAN "|%d| Philo %d take a fork\n" ANSI_COLOR_RESET, action_time - start, philo_content->id);
-		pthread_mutex_unlock(&dates->print_mutex);
-		pthread_mutex_lock(&((t_philo *)philo_list->next)->mutex);
-		pthread_mutex_lock(&dates->print_mutex);
-		printf(ANSI_COLOR_CYAN "|%d| Philo %d take a fork\n" ANSI_COLOR_RESET, action_time - start, philo_content->id);
-		pthread_mutex_unlock(&dates->print_mutex);
-		pthread_mutex_lock(&dates->print_mutex);
-		printf(ANSI_COLOR_CYAN "|%d| Philo %d is eatting\n" ANSI_COLOR_RESET, action_time - start, philo_content->id);
-		pthread_mutex_unlock(&dates->print_mutex);
-		ft_usleep(dates->time_to_eat);
-		pthread_mutex_unlock(&((t_philo *)philo_list->next)->mutex);
-		pthread_mutex_unlock(&philo_content->mutex);
+		pthread_mutex_lock(&philo_content->left_fork);
+		if (check_time(&dates, &action_time, last_eat))
+			break ;
+		printf("|%d| Philo %d take a fork\n", action_time - start, philo_content->id);
+		pthread_mutex_lock(philo_content->right_fork);
+		if (check_time(&dates, &action_time, last_eat))
+			break ;
+		printf("|%d| Philo %d take a fork\n", action_time - start, philo_content->id);
+		printf("|%d| Philo %d is eatting\n", action_time - start, philo_content->id);
 		last_eat = get_my_time();
-		if ((int)(last_eat - action_time) > dates->time_to_die)
-		{
-			dates->die_flag = 1;
+		ft_usleep(dates->time_to_eat);
+		pthread_mutex_unlock(&philo_content->left_fork);
+		pthread_mutex_unlock(philo_content->right_fork);
+		if (check_time(&dates, &action_time, last_eat))
 			break ;
-		}
-		action_time = get_my_time();
-		pthread_mutex_lock(&dates->print_mutex);
-		printf(ANSI_COLOR_CYAN "|%d| Philo %d is sleeping\n" ANSI_COLOR_RESET, action_time - start, philo_content->id);
-		pthread_mutex_unlock(&dates->print_mutex);
+		printf("|%d| Philo %d is sleeping\n", action_time - start, philo_content->id);
 		ft_usleep(dates->time_to_sleep);
-		action_time = get_my_time();
-		if ((int)(action_time - last_eat) > dates->time_to_die)
-		{
-			dates->die_flag = 1;
-			break ;
-		}
-		printf(ANSI_COLOR_CYAN "|%d| Philo %d is thinking\n" ANSI_COLOR_RESET, action_time - start, philo_content->id);
-		// action_time = get_my_time();
-		// printf(ANSI_COLOR_CYAN "|%d| Philo %d is sleeping\n" ANSI_COLOR_RESET, action_time - start, philo_content->id);
-		// ft_usleep(dates->time_to_sleep);
-		// elapsed = action_time - last_eat;
-		// printf("%u\n", elapsed);
-		// if ((int)elapsed > dates->time_to_die)
+		// pthread_mutex_lock(&philo_content->left_fork);
+		// pthread_mutex_lock(&dates->print_mutex);
+		// printf("|%d| Philo %d take a fork\n", action_time - start, philo_content->id);
+		// pthread_mutex_unlock(&dates->print_mutex);
+		// pthread_mutex_lock(philo_content->right_fork);
+		// pthread_mutex_lock(&dates->print_mutex);
+		// printf("|%d| Philo %d take a fork\n", action_time - start, philo_content->id);
+		// pthread_mutex_unlock(&dates->print_mutex);
+		// pthread_mutex_lock(&dates->print_mutex);
+		// printf("|%d| Philo %d is eatting\n", action_time - start, philo_content->id);
+		// pthread_mutex_unlock(&dates->print_mutex);
+		// ft_usleep(dates->time_to_eat);
+		// pthread_mutex_unlock(philo_content->right_fork);
+		// pthread_mutex_unlock(&philo_content->left_fork);
+		// last_eat = get_my_time();
+		// if ((int)(last_eat - action_time) > dates->time_to_die)
 		// {
 		// 	dates->die_flag = 1;
 		// 	break ;
 		// }
 		// action_time = get_my_time();
-		// all_time = action_time - start;
 		// pthread_mutex_lock(&dates->print_mutex);
-		// printf(ANSI_COLOR_CYAN "|%d| Philo %d is eatting\n" ANSI_COLOR_RESET, all_time, philo_content->id);
+		// printf("|%d| Philo %d is sleeping\n", action_time - start, philo_content->id);
 		// pthread_mutex_unlock(&dates->print_mutex);
-		// ft_usleep(dates->time_to_eat);
-		// last_eat = get_my_time();
-
+		// ft_usleep(dates->time_to_sleep);
+		// action_time = get_my_time();
+		// if ((int)(action_time - last_eat) > dates->time_to_die)
+		// {
+		// 	dates->die_flag = 1;
+		// 	break ;
+		// }
+		// printf("|%d| Philo %d is thinking\n", action_time - start, philo_content->id);
 	}
-	
-	// while (dates->die_flag == 0)
-	// {
-	// 	pthread_mutex_lock(&philo_content->mutex);
-	// 	pthread_mutex_lock(&dates->print_mutex);
-	// 	printf("Philo %d take first spoon\n", philo_content->id);
-	// 	pthread_mutex_unlock(&dates->print_mutex);
-	// 	pthread_mutex_lock(&((t_philo *)&philo_list->next)->mutex);
-	// 	pthread_mutex_lock(&dates->print_mutex);
-	// 	printf("Philo %d take second spoon\n", philo_content->id);
-	// 	pthread_mutex_unlock(&dates->print_mutex);
-	// 	pthread_mutex_lock(&dates->print_mutex);
-	// 	printf("Philo %d is eatting\n", philo_content->id);
-	// 	ft_usleep(dates->time_to_eat);
-	// 	count++;
-	// 	pthread_mutex_unlock(&dates->print_mutex);
-	// 	pthread_mutex_unlock(&philo_content->mutex);
-	// 	pthread_mutex_unlock(&((t_philo *)&philo_list->next)->mutex);
-	// 	pthread_mutex_unlock(&dates->print_mutex);
-	// 	ft_philo_sleep(dates->time_to_sleep, philo_content->id);
-
-	// 	if (count == dates->eat_number)
-	// 		dates->die_flag = 1;
-	// }
 	return (args);
 }
 
