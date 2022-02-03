@@ -97,8 +97,10 @@ void	*birth_philo(void *args)
 			break ;
 		printf("|%d| Philo %d take a fork\n", action_time - philo_content->start, philo_content->id);
 		printf("|%d| Philo %d is eatting\n", action_time - philo_content->start, philo_content->id);
-		philo_content->last_eat = get_my_time();
+		// pthread_mutex_lock(&dates->print_mutex);
 		ft_usleep(dates->time_to_eat);
+		// pthread_mutex_unlock(&dates->print_mutex);
+		philo_content->last_eat = get_my_time();
 		philo_content->count++;
 		if (philo_content->count == dates->eat_number)
 			break;
@@ -162,6 +164,7 @@ int	main(int argc, char **argv)
 			while (1)
 			{
 				philo = (t_philo *)(dates.philos)->content;
+				
 				if ((int)(get_my_time() - philo->last_eat) > dates.time_to_die)
 				{
 					dates.die_flag = 1;
