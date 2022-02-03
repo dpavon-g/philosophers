@@ -27,10 +27,13 @@ typedef	struct s_dates
 
 typedef	struct s_philo
 {
-	pthread_mutex_t	left_fork;
-	pthread_mutex_t *right_fork;
-	pthread_t		philo; 
 	int				id;
+	int				count;
+	useconds_t		start;
+	useconds_t		last_eat;
+	pthread_mutex_t	left_fork;
+	pthread_mutex_t	*right_fork;
+	pthread_t		philo; 
 	t_dates			*dates;
 }	t_philo;
 

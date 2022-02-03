@@ -71,81 +71,48 @@ int	check_time(t_dates **dates, useconds_t *actual, useconds_t past)
 
 void	*birth_philo(void *args)
 {
-	t_philo *philo_content;
-	t_list	*philo_list;
-	t_dates	*dates;
-	useconds_t	start;
+	t_philo		*philo_content;
+	t_list		*philo_list;
+	t_dates		*dates;
 	useconds_t	action_time;
-	// useconds_t	all_time;
-	useconds_t	last_eat;
 
 	philo_list = args;
 	philo_content = philo_list->content;
 	dates = philo_content->dates;
-	start = get_my_time();
-	action_time = start;
-	last_eat = start;
+	philo_content->start = get_my_time();
+	action_time = philo_content->start;
+	philo_content->last_eat = philo_content->start;
 	if (philo_content->id % 2 == 0)
-	{
-		// all_time = get_my_time() - start;
-		// pthread_mutex_lock(&dates->print_mutex);
-		// printf("|%d| Philo %d is thinking\n", all_time, philo_content->id);
-		// pthread_mutex_unlock(&dates->print_mutex);
 		ft_usleep(60);
-	}
+	philo_content->count = 0;
 	while (dates->die_flag == 0)
 	{
-		if (check_time(&dates, &action_time, last_eat))
+		if (check_time(&dates, &action_time, philo_content->last_eat))
 			break ;
 		pthread_mutex_lock(&philo_content->left_fork);
-		if (check_time(&dates, &action_time, last_eat))
+		if (check_time(&dates, &action_time, philo_content->last_eat))
 			break ;
-		printf("|%d| Philo %d take a fork\n", action_time - start, philo_content->id);
+		printf("|%d| Philo %d take a fork\n", action_time - philo_content->start, philo_content->id);
 		pthread_mutex_lock(philo_content->right_fork);
-		if (check_time(&dates, &action_time, last_eat))
+		if (check_time(&dates, &action_time, philo_content->last_eat))
 			break ;
-		printf("|%d| Philo %d take a fork\n", action_time - start, philo_content->id);
-		printf("|%d| Philo %d is eatting\n", action_time - start, philo_content->id);
-		last_eat = get_my_time();
+		printf("|%d| Philo %d take a fork\n", action_time - philo_content->start, philo_content->id);
+		printf("|%d| Philo %d is eatting\n", action_time - philo_content->start, philo_content->id);
+		philo_content->last_eat = get_my_time();
 		ft_usleep(dates->time_to_eat);
+		philo_content->count++;
+		if (philo_content->count == dates->eat_number)
+			break;
 		pthread_mutex_unlock(&philo_content->left_fork);
 		pthread_mutex_unlock(philo_content->right_fork);
-		if (check_time(&dates, &action_time, last_eat))
+		if (check_time(&dates, &action_time, philo_content->last_eat))
 			break ;
-		printf("|%d| Philo %d is sleeping\n", action_time - start, philo_content->id);
+		printf("|%d| Philo %d is sleeping\n", action_time - philo_content->start, philo_content->id);
 		ft_usleep(dates->time_to_sleep);
-		// pthread_mutex_lock(&philo_content->left_fork);
-		// pthread_mutex_lock(&dates->print_mutex);
-		// printf("|%d| Philo %d take a fork\n", action_time - start, philo_content->id);
-		// pthread_mutex_unlock(&dates->print_mutex);
-		// pthread_mutex_lock(philo_content->right_fork);
-		// pthread_mutex_lock(&dates->print_mutex);
-		// printf("|%d| Philo %d take a fork\n", action_time - start, philo_content->id);
-		// pthread_mutex_unlock(&dates->print_mutex);
-		// pthread_mutex_lock(&dates->print_mutex);
-		// printf("|%d| Philo %d is eatting\n", action_time - start, philo_content->id);
-		// pthread_mutex_unlock(&dates->print_mutex);
-		// ft_usleep(dates->time_to_eat);
-		// pthread_mutex_unlock(philo_content->right_fork);
-		// pthread_mutex_unlock(&philo_content->left_fork);
-		// last_eat = get_my_time();
-		// if ((int)(last_eat - action_time) > dates->time_to_die)
-		// {
-		// 	dates->die_flag = 1;
-		// 	break ;
-		// }
-		// action_time = get_my_time();
-		// pthread_mutex_lock(&dates->print_mutex);
-		// printf("|%d| Philo %d is sleeping\n", action_time - start, philo_content->id);
-		// pthread_mutex_unlock(&dates->print_mutex);
-		// ft_usleep(dates->time_to_sleep);
-		// action_time = get_my_time();
-		// if ((int)(action_time - last_eat) > dates->time_to_die)
-		// {
-		// 	dates->die_flag = 1;
-		// 	break ;
-		// }
-		// printf("|%d| Philo %d is thinking\n", action_time - start, philo_content->id);
+		if (check_time(&dates, &action_time, philo_content->last_eat))
+			break ;
+		printf("|%d| Philo %d is thinking\n", action_time - philo_content->start, philo_content->id);
+
 	}
 	return (args);
 }
@@ -192,7 +159,18 @@ int	main(int argc, char **argv)
 				dates.philos = dates.philos->next;
 				i++;
 			}
-			while (!dates.die_flag)
+			i = 0;
+			while (1)
+			{
+				philo = (t_philo *)(dates.philos)->content;
+				if ((int)(get_my_time() - philo->last_eat) > dates.time_to_die)
+				{
+					dates.die_flag = 1;
+					printf("|%d| Philo %d have die\n", get_my_time() - philo->start, philo->id);
+					break ;
+				}
+				dates.philos = dates.philos->next;
+			}
 			i = 0;
 			while (i < dates.philo_num)
 			{
