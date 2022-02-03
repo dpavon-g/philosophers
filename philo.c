@@ -87,13 +87,12 @@ void	*birth_philo(void *args)
 	philo_content->count = 0;
 	while (dates->die_flag == 0)
 	{
-		if (check_time(&dates, &action_time, philo_content->last_eat))
-			break ;
 		pthread_mutex_lock(&philo_content->left_fork);
 		if (check_time(&dates, &action_time, philo_content->last_eat))
 			break ;
 		printf("|%d| Philo %d take a fork\n", action_time - philo_content->start, philo_content->id);
 		pthread_mutex_lock(philo_content->right_fork);
+
 		if (check_time(&dates, &action_time, philo_content->last_eat))
 			break ;
 		printf("|%d| Philo %d take a fork\n", action_time - philo_content->start, philo_content->id);
@@ -112,7 +111,6 @@ void	*birth_philo(void *args)
 		if (check_time(&dates, &action_time, philo_content->last_eat))
 			break ;
 		printf("|%d| Philo %d is thinking\n", action_time - philo_content->start, philo_content->id);
-
 	}
 	return (args);
 }
@@ -159,6 +157,7 @@ int	main(int argc, char **argv)
 				dates.philos = dates.philos->next;
 				i++;
 			}
+			ft_usleep(60);
 			i = 0;
 			while (1)
 			{
@@ -166,7 +165,9 @@ int	main(int argc, char **argv)
 				if ((int)(get_my_time() - philo->last_eat) > dates.time_to_die)
 				{
 					dates.die_flag = 1;
+					// pthread_mutex_lock(&dates.print_mutex);
 					printf("|%d| Philo %d have die\n", get_my_time() - philo->start, philo->id);
+					pthread_mutex_unlock(&philo->left_fork);
 					break ;
 				}
 				dates.philos = dates.philos->next;
@@ -179,6 +180,7 @@ int	main(int argc, char **argv)
 				dates.philos = dates.philos->next;
 				i++;
 			}
+			pthread_mutex_unlock(&dates.print_mutex);
 		}
 	}
 }
