@@ -6,7 +6,7 @@
 /*   By: dpavon-g <dpavon-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/04 15:30:04 by dpavon-g          #+#    #+#             */
-/*   Updated: 2022/02/04 18:59:52 by dpavon-g         ###   ########.fr       */
+/*   Updated: 2022/02/04 19:22:19 by dpavon-g         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,29 +14,28 @@
 
 t_list	*roll_call(int num, t_dates *dates)
 {
-	t_philo		*table;
 	t_list		*philos;
 	int			i;
 
 	i = 0;
 	philos = NULL;
-	table = malloc(sizeof(t_philo) * num);
+	dates->table = malloc(sizeof(t_philo) * num);
 	while (i < num)
 	{
-		table[i].id = i + 1;
-		table[i].dates = dates;
-		pthread_mutex_init(&table[i].left_fork, NULL);
+		dates->table[i].id = i + 1;
+		dates->table[i].dates = dates;
+		pthread_mutex_init(&dates->table[i].left_fork, NULL);
 		if (i + 1 < num)
-			table[i].right_fork = &table[i + 1].left_fork;
+			dates->table[i].right_fork = &dates->table[i + 1].left_fork;
 		else
-			table[i].right_fork = &table[0].left_fork;
-		ft_lstadd_back(&philos, ft_lstnew(&table[i]));
+			dates->table[i].right_fork = &dates->table[0].left_fork;
+		ft_lstadd_back(&philos, ft_lstnew(&dates->table[i]));
 		i++;
 	}
 	(void)dates;
 	if (philos)
 		ft_lstlast(philos)->next = philos;
-	free(table);
+	// free(table);
 	return (philos);
 }
 
@@ -182,6 +181,7 @@ void	free_list(t_dates *dates)
 		philo = aux;
 		i++;
 	}
+	free(dates->table);
 }
 
 int	main(int argc, char **argv)

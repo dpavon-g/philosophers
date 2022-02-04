@@ -6,7 +6,7 @@
 /*   By: dpavon-g <dpavon-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/04 15:28:46 by dpavon-g          #+#    #+#             */
-/*   Updated: 2022/02/04 17:52:52 by dpavon-g         ###   ########.fr       */
+/*   Updated: 2022/02/04 19:21:49 by dpavon-g         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,13 +17,13 @@
 # include <pthread.h>
 # include <sys/time.h>
 
-# define ANSI_COLOR_RED		"\x1b[31m"
-# define ANSI_COLOR_GREEN	"\x1b[32m"
-# define ANSI_COLOR_YELLOW	"\x1b[33m"
-# define ANSI_COLOR_BLUE		"\x1b[34m"
-# define ANSI_COLOR_MAGENTA	"\x1b[35m"
-# define ANSI_COLOR_CYAN		"\x1b[36m"
-# define ANSI_COLOR_RESET	"\x1b[0m"
+# define RED		"\x1b[31m"
+# define GREEN	"\x1b[32m"
+# define YELLOW	"\x1b[33m"
+# define BLUE		"\x1b[34m"
+# define MAGENTA	"\x1b[35m"
+# define CYAN		"\x1b[36m"
+# define RESET	"\x1b[0m"
 
 typedef struct s_dates
 {
@@ -34,6 +34,7 @@ typedef struct s_dates
 	int				eat_number;
 	int				die_flag;
 	pthread_mutex_t	die_mutex;
+	struct s_philo	*table;
 	t_list			*philos;
 }	t_dates;
 
