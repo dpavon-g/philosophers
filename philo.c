@@ -6,7 +6,7 @@
 /*   By: dpavon-g <dpavon-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/04 15:30:04 by dpavon-g          #+#    #+#             */
-/*   Updated: 2022/02/04 19:22:19 by dpavon-g         ###   ########.fr       */
+/*   Updated: 2022/02/04 19:49:07 by dpavon-g         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -90,16 +90,18 @@ int	t_eat(t_dates **dates, t_philo **philo, useconds_t *action_time)
 	if (check_time(dates, action_time, (*philo)->last_eat))
 		return (1);
 	printf("|%d| Philo %d take a fork\n", *action_time - (*philo)->start, (*philo)->id);
+	pthread_mutex_lock(&(*dates)->die_mutex);
 	if (check_time(dates, action_time, (*philo)->last_eat))
 		return (1);
 	printf("|%d| Philo %d is eatting\n", *action_time - (*philo)->start, (*philo)->id);
 	(*philo)->last_eat = get_my_time();
+	pthread_mutex_unlock(&(*dates)->die_mutex);
 	ft_usleep((*dates)->time_to_eat);
 	(*philo)->count++;
-	if ((*philo)->count == (*dates)->eat_number)
-		return (1);
 	pthread_mutex_unlock(&(*philo)->left_fork);
 	pthread_mutex_unlock((*philo)->right_fork);
+	if ((*philo)->count == (*dates)->eat_number)
+		return(1);
 	return (0);
 }
 
@@ -210,12 +212,17 @@ int	main(int argc, char **argv)
 			philo = (t_philo *)(dates.philos)->content;
 			if ((int)(get_my_time() - philo->last_eat) > dates.time_to_die)
 			{
-				pthread_mutex_lock(&dates.die_mutex);
-				dates.die_flag = 1;
-				printf("|%d| Philo %d have die\n", get_my_time() - philo->start, philo->id);
-				pthread_mutex_unlock(&dates.die_mutex);
-				pthread_mutex_unlock(&philo->left_fork);
-				break ;
+				if (philo->count != dates.eat_number)
+				{
+					pthread_mutex_lock(&dates.die_mutex);
+					dates.die_flag = 1;
+					printf("|%d| Philo %d have die\n", get_my_time() - philo->start, philo->id);
+					pthread_mutex_unlock(&dates.die_mutex);
+					pthread_mutex_unlock(&philo->left_fork);
+					break ;
+				}
+				else
+					break ;
 			}
 			dates.philos = dates.philos->next;
 		}
