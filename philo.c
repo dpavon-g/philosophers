@@ -6,7 +6,7 @@
 /*   By: dpavon-g <dpavon-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/04 15:30:04 by dpavon-g          #+#    #+#             */
-/*   Updated: 2022/02/04 18:10:01 by dpavon-g         ###   ########.fr       */
+/*   Updated: 2022/02/04 18:59:52 by dpavon-g         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -172,7 +172,7 @@ void	free_list(t_dates *dates)
 	int		i;
 	t_list	*philo;
 	t_list	*aux;
-	
+
 	i = 0;
 	philo = dates->philos;
 	while (i < dates->philo_num)
@@ -204,7 +204,6 @@ int	main(int argc, char **argv)
 			dates.philos = dates.philos->next;
 			i++;
 		}
-		ft_usleep(60);
 		i = 0;
 		while (1)
 		{
