@@ -35,7 +35,6 @@ t_list	*roll_call(int num, t_dates *dates)
 	(void)dates;
 	if (philos)
 		ft_lstlast(philos)->next = philos;
-	// free(table);
 	return (philos);
 }
 
@@ -61,12 +60,6 @@ void	ft_usleep(useconds_t	time)
 	}
 }
 
-void	ft_philo_sleep(int time, int id)
-{
-	printf("Philo %d is sleeping\n", id);
-	ft_usleep(time);
-}
-
 int	check_time(t_dates **dates, useconds_t *actual, useconds_t past)
 {
 	*actual = get_my_time();
@@ -85,15 +78,15 @@ int	t_eat(t_dates **dates, t_philo **philo, useconds_t *action_time)
 	pthread_mutex_lock(&(*philo)->left_fork);
 	if (check_time(dates, action_time, (*philo)->last_eat))
 		return (1);
-	printf("|%d| Philo %d take a fork\n", *action_time - (*philo)->start, (*philo)->id);
+	printf("|%d| Philo %d has taken a fork\n", *action_time - (*philo)->start, (*philo)->id);
 	pthread_mutex_lock((*philo)->right_fork);
 	if (check_time(dates, action_time, (*philo)->last_eat))
 		return (1);
-	printf("|%d| Philo %d take a fork\n", *action_time - (*philo)->start, (*philo)->id);
+	printf("|%d| Philo %d has taken a fork\n", *action_time - (*philo)->start, (*philo)->id);
 	pthread_mutex_lock(&(*dates)->die_mutex);
 	if (check_time(dates, action_time, (*philo)->last_eat))
 		return (1);
-	printf("|%d| Philo %d is eatting\n", *action_time - (*philo)->start, (*philo)->id);
+	printf("|%d| Philo %d is eating\n", *action_time - (*philo)->start, (*philo)->id);
 	(*philo)->last_eat = get_my_time();
 	pthread_mutex_unlock(&(*dates)->die_mutex);
 	ft_usleep((*dates)->time_to_eat);
@@ -101,7 +94,7 @@ int	t_eat(t_dates **dates, t_philo **philo, useconds_t *action_time)
 	pthread_mutex_unlock(&(*philo)->left_fork);
 	pthread_mutex_unlock((*philo)->right_fork);
 	if ((*philo)->count == (*dates)->eat_number)
-		return(1);
+		return (1);
 	return (0);
 }
 
@@ -117,7 +110,7 @@ int	t_sleep(t_dates **dates, t_philo **philo, useconds_t *action_time)
 	return (0);
 }
 
-void	*birth_philo(void *args)
+void	*philo_runtine(void *args)
 {
 	t_philo		*philo_content;
 	t_list		*philo_list;
@@ -186,46 +179,74 @@ void	free_list(t_dates *dates)
 	free(dates->table);
 }
 
+void	kill_philo(t_dates *dates, t_philo **philo)
+{
+	pthread_mutex_lock(&dates->die_mutex);
+	dates->die_flag = 1;
+	printf("|%d| Philo %d died\n", get_my_time() - (*philo)->start, (*philo)->id);
+	pthread_mutex_unlock(&dates->die_mutex);
+	pthread_mutex_unlock(&(*philo)->left_fork);
+}
+
+void	start_dinner(t_dates *dates, t_philo **philo)
+{
+	int	i;
+
+	i = -1;
+	while (++i < dates->philo_num)
+	{
+		*philo = (t_philo *)(dates->philos)->content;
+		pthread_create(&(*philo)->philo, NULL, philo_runtine, dates->philos);
+		dates->philos = dates->philos->next;
+	}
+	while (1)
+	{
+		*philo = (t_philo *)(dates->philos)->content;
+		if ((int)(get_my_time() - (*philo)->last_eat) > dates->time_to_die)
+		{
+			if ((*philo)->count != dates->eat_number)
+			{
+				kill_philo(dates, philo);
+				break ;
+			}
+			else
+				break ;
+		}
+		dates->philos = dates->philos->next;
+	}
+}
+
+int	check_errors(char **argv, int argc)
+{
+	int	i;
+	int	j;
+
+	i = 1;
+	while (i < argc)
+	{
+		j = 0;
+		while (j < (int)ft_strlen(argv[i]))
+		{
+			if (argv[i][j] < 48 || argv[i][j] > 57)
+				return (0);
+			j++;
+		}
+		i++;
+	}
+	return (1);
+}
+
 int	main(int argc, char **argv)
 {
 	t_dates		dates;
 	t_philo		*philo;
 	int			i;
 
-	(void)argv;
-	atexit(leaks);
-	if (argc == 5 || argc == 6)
+	if ((argc == 5 || argc == 6) && check_errors(argv, argc))
 	{
 		charge_dates(&dates, argc, argv);
 		pthread_mutex_init(&dates.die_mutex, NULL);
-		i = 0;
-		while (i < dates.philo_num)
-		{
-			philo = (t_philo *)(dates.philos)->content;
-			pthread_create(&philo->philo, NULL, birth_philo, dates.philos);
-			dates.philos = dates.philos->next;
-			i++;
-		}
-		i = 0;
-		while (1)
-		{
-			philo = (t_philo *)(dates.philos)->content;
-			if ((int)(get_my_time() - philo->last_eat) > dates.time_to_die)
-			{
-				if (philo->count != dates.eat_number)
-				{
-					pthread_mutex_lock(&dates.die_mutex);
-					dates.die_flag = 1;
-					printf("|%d| Philo %d have die\n", get_my_time() - philo->start, philo->id);
-					pthread_mutex_unlock(&dates.die_mutex);
-					pthread_mutex_unlock(&philo->left_fork);
-					break ;
-				}
-				else
-					break ;
-			}
-			dates.philos = dates.philos->next;
-		}
+		start_dinner(&dates, &philo);
 		i = 0;
 		while (i < dates.philo_num)
 		{
@@ -236,24 +257,9 @@ int	main(int argc, char **argv)
 		}
 		free_list(&dates);
 	}
+	else
+		printf(RED"Error argument\n"RESET);
 }
-
-// void	leaks(void)
-// {
-// 	system("leaks philo");
-// }
-
-// void	ft_usleep(int time)
-// {
-// 	int count;
-
-// 	count = 0;
-// 	while (count < time)
-// 	{
-// 		usleep(10);
-// 		count += 10;
-// 	}
-// }
 
 // void	start_dinner(t_dates dates, pthread_mutex_t *philo)
 // {
