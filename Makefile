@@ -6,15 +6,13 @@
 #    By: dpavon-g <dpavon-g@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2021/04/07 18:01:15 by dpavon-g          #+#    #+#              #
-#    Updated: 2021/11/22 15:00:00 by dpavon-g         ###   ########.fr        #
+#    Updated: 2022/02/07 17:09:56 by dpavon-g         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME = philo
 CC = gcc -pthread
-LIB_PATH = libft/
-LIB_NAME = $(LIB_PATH)libft.a
-INCLUDES = -I. -I$(LIB_PATH)
+INCLUDES = -I.
 FSANITIZE = -g3 -fsanitize=address
 CFLAGS = -Wall -Wextra -Werror $(INCLUDES)
 
@@ -28,21 +26,22 @@ MAGENTA = \033[0;35m
 CURSIVE = \033[3m
 NO_COLOR = \033[0m
 
-SRCS = philo.c\
-
+SRCS =	src/philo.c\
+		src/philo_aux.c\
+		src/philo_aux_2.c\
+		src/philo_utils.c\
+		
 OBJECTS = $(SRCS:.c=.o) 
 
 all: $(NAME)
 
 
 $(NAME): $(OBJECTS)
-	@make -s -C $(LIB_PATH)
-	@$(CC) $(CFLAGS) $(LINK) $^ -L ./libft/ -l ft -o $@
+	@$(CC) $(CFLAGS) $^ -o $@
 	@echo "$(GREY) Philosophers compiled $(GREEN) ✔✔✔"
 
 clean:
 	@rm -f $(OBJECTS)
-	@$(MAKE) clean -C libft
 	@clear
 	@echo "$(RED) **** Object files removed **** $(NO_COLOR)"
 
@@ -51,7 +50,6 @@ normi:
 
 fclean: clean
 	@rm -f $(NAME)
-	@rm -f libft/libft.a
 	@echo "$(RED) **** Fclean done **** $(NO_COLOR)"
 
 re: fclean all
