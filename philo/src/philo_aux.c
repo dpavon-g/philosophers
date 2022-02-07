@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   philo_aux.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dpavon-g <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: dpavon-g <dpavon-g@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/07 17:06:10 by dpavon-g          #+#    #+#             */
-/*   Updated: 2022/02/07 17:06:11 by dpavon-g         ###   ########.fr       */
+/*   Updated: 2022/02/07 18:52:45 by dpavon-g         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,8 @@ int	check_errors(char **argv, int argc)
 				return (0);
 			j++;
 		}
+		if ((ft_atoi(argv[i]) < 0) || ft_atoi(argv[i]) > 2147483647)
+			return (0);
 		i++;
 	}
 	return (1);
